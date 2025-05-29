@@ -1,0 +1,135 @@
+# Base Image Dockerfile - Pre-built with all dependencies
+# This should be built once and pushed to your registry
+FROM ruby:3.3.0-alpine
+
+# Maintainer info
+LABEL maintainer="your-email@example.com"
+LABEL description="Ruby Rails base image with all dependencies pre-installed"
+LABEL version="1.0"
+
+# Install all possible packages that might be needed
+RUN apk update --no-cache && \
+    apk upgrade --no-cache && \
+    apk add --no-cache \
+    # Build essentials
+    build-base \
+    gcc \
+    g++ \
+    make \
+    cmake \
+    autoconf \
+    automake \
+    libtool \
+    pkgconfig \
+    # System libraries
+    musl-dev \
+    linux-headers \
+    # Network and SSL
+    curl \
+    curl-dev \
+    openssl-dev \
+    ca-certificates \
+    # Version control
+    git \
+    # Database clients and dev libraries
+    postgresql-client \
+    postgresql-dev \
+    libpq-dev \
+    mariadb-connector-c \
+    mariadb-dev \
+    sqlite \
+    sqlite-dev \
+    # Image processing
+    imagemagick \
+    imagemagick-dev \
+    libjpeg-turbo \
+    libjpeg-turbo-dev \
+    libpng \
+    libpng-dev \
+    libwebp \
+    libwebp-dev \
+    freetype \
+    freetype-dev \
+    # JavaScript runtime and package managers
+    nodejs \
+    npm \
+    yarn \
+    # System utilities
+    bash \
+    tzdata \
+    libcurl \
+    wget \
+    unzip \
+    # Performance libraries
+    libgomp \
+    mimalloc2 \
+    mimalloc2-dev \
+    # Additional useful libraries
+    libxml2-dev \
+    libxslt-dev \
+    zlib-dev \
+    readline-dev \
+    yaml-dev \
+    libffi-dev \
+    gdbm-dev \
+    ncurses-dev \
+    # Process management
+    dumb-init \
+    # File processing
+    file \
+    # Text processing
+    grep \
+    sed \
+    gawk \
+    # Network tools
+    netcat-openbsd \
+    # Compression
+    gzip \
+    bzip2 \
+    xz \
+    # Python (sometimes needed for native extensions)
+    python3 \
+    python3-dev \
+    py3-pip \
+    && rm -rf /var/cache/apk/* /tmp/* /var/tmp/*
+
+# Pre-configure Ruby environment optimizations
+ENV LANG=C.UTF-8
+ENV LC_ALL=C.UTF-8
+ENV RUBY_YJIT_ENABLE=1
+ENV MALLOC_ARENA_MAX=2
+ENV LD_PRELOAD=libmimalloc.so.2
+
+# Pre-configure Bundler for optimal performance
+RUN gem install bundler -v 2.6.5 --no-document && \
+    bundle config set --global jobs $(nproc) && \
+    bundle config set --global retry 3 && \
+    bundle config set --global timeout 30 && \
+    bundle config set --global silence_root_warning true
+
+# Pre-install commonly used gems (optional - can speed up builds further)
+RUN gem install --no-document \
+    rake \
+    rails \
+    pg \
+    redis \
+    sidekiq \
+    puma \
+    bootsnap \
+    sassc \
+    image_processing \
+    mini_magick
+
+# Create common directories
+RUN mkdir -p /app /tmp/rails && \
+    chmod 755 /app /tmp/rails
+
+# Set working directory
+WORKDIR /app
+
+# Health check command (can be overridden)
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:3000/health || exit 1
+
+# Default command (will be overridden in application Dockerfiles)
+CMD ["/bin/bash"]
