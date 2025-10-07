@@ -1,0 +1,53 @@
+# Minimal Rails Base Image - Only essential packages
+FROM ruby:3.3.0-alpine
+
+LABEL maintainer="your-email@example.com"
+LABEL description="Minimal Ruby Rails base image - essential packages only"
+LABEL version="minimal"
+
+# Install only essential packages
+RUN apk update --no-cache && \
+    apk upgrade --no-cache && \
+    apk add --no-cache \
+    # Core build tools
+    build-base \
+    gcc \
+    make \
+    # System libraries
+    musl-dev \
+    # Network
+    curl \
+    ca-certificates \
+    # Database
+    postgresql-client \
+    postgresql-dev \
+    # JavaScript runtime (minimal)
+    nodejs \
+    # System utilities
+    bash \
+    tzdata \
+    # Process management
+    dumb-init \
+    && rm -rf /var/cache/apk/* /tmp/* /var/tmp/*
+
+# Basic environment
+ENV LANG=C.UTF-8
+ENV LC_ALL=C.UTF-8
+
+# Configure Bundler (minimal)
+RUN gem install bundler --no-document && \
+    bundle config set --global jobs $(nproc) && \
+    bundle config set --global retry 3
+
+# Pre-install only Rails and pg
+RUN gem install --no-document \
+    rails \
+    pg
+
+# Create directories
+RUN mkdir -p /app && \
+    chmod 755 /app
+
+WORKDIR /app
+
+CMD ["/bin/bash"]

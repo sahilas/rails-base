@@ -1,0 +1,57 @@
+name: Build Minimal Image
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'Dockerfile.minimal'
+
+jobs:
+  build-minimal-image:
+    name: Build and Push Minimal Image
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push minimal image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile.minimal
+          platforms: linux/amd64
+          push: true
+          tags: |
+            ghcr.io/sahilas/rails-base:minimal
+            ghcr.io/sahilas/rails-base:minimal-${{ github.run_number }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Test minimal image
+        run: |
+          echo "🧪 Testing minimal image..."
+          docker run --rm ghcr.io/sahilas/rails-base:minimal ruby --version
+          docker run --rm ghcr.io/sahilas/rails-base:minimal bundle --version  
+          docker run --rm ghcr.io/sahilas/rails-base:minimal node --version
+          echo "✅ Minimal image tests passed!"
+
+      - name: Generate summary
+        run: |
+          echo "## 🎉 Minimal Image Build Successful!" >> $GITHUB_STEP_SUMMARY
+          echo "- **Image**: \`ghcr.io/sahilas/rails-base:minimal\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Tags**: minimal, minimal-${{ github.run_number }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Size**: Ultra-lightweight with essential packages only" >> $GITHUB_STEP_SUMMARY
