@@ -1,97 +1,47 @@
-# Production Base Image - Optimized for performance and security
-FROM ruby:3.3.0-alpine
+# Production Image - Extends base with production optimizations
+FROM ./Dockerfile.base
 
-LABEL maintainer="your-email@example.com"
 LABEL description="Ruby Rails production base image - optimized and secure"
-LABEL version="prod"
+LABEL version="prod-3.0"
 
-# Install production packages only
-RUN apk update --no-cache && \
-    apk upgrade --no-cache && \
-    apk add --no-cache \
-    # Essential build tools
-    build-base \
-    gcc \
+# Switch back to root to install packages and configure
+USER root
+
+# Install production-specific packages
+RUN apk add --no-cache \
+    # Additional production build tools
     g++ \
-    make \
-    musl-dev \
-    linux-headers \
-    # Network and SSL
-    curl \
-    openssl-dev \
-    ca-certificates \
-    # Version control (minimal)
-    git \
-    # Database clients
-    postgresql-client \
-    postgresql-dev \
-    libpq-dev \
-    # Image processing (production)
-    imagemagick \
-    libjpeg-turbo \
-    freetype \
-    # JavaScript runtime
-    nodejs \
-    npm \
-    # System utilities (minimal)
-    bash \
-    tzdata \
-    # Performance libraries
+    # Production libraries
     libgomp \
     mimalloc2 \
     mimalloc2-dev \
-    # Required libraries
-    libxml2-dev \
-    libxslt-dev \
-    zlib-dev \
-    yaml-dev \
-    libffi-dev \
-    # Process management
-    dumb-init \
-    && rm -rf /var/cache/apk/* /tmp/* /var/tmp/*
+    # Additional production dependencies
+    libpq-dev \
+    freetype \
+    bzip2 \
+    xz \
+    && rm -rf /var/cache/apk/*
 
-# Production environment configuration
-ENV LANG=C.UTF-8
-ENV LC_ALL=C.UTF-8
-ENV RUBY_YJIT_ENABLE=1
+# Configure production environment optimizations
 ENV MALLOC_ARENA_MAX=2
 ENV LD_PRELOAD=libmimalloc.so.2
 ENV RAILS_ENV=production
 ENV NODE_ENV=production
 
-# Configure Bundler for production
-RUN gem install bundler -v 2.6.5 --no-document && \
-    bundle config set --global jobs $(nproc) && \
-    bundle config set --global retry 3 && \
-    bundle config set --global timeout 30 && \
-    bundle config set --global silence_root_warning true && \
-    bundle config set --global without 'development test'
+# Configure Bundler for production (exclude dev/test gems)
+RUN bundle config set --global without 'development test'
 
-# Pre-install production gems only
+# Pre-install production-specific gems
 RUN gem install --no-document \
-    rails \
-    pg \
     redis \
-    sidekiq \
-    puma \
-    bootsnap
+    sidekiq
 
-# Create non-root user for security
-RUN addgroup -g 1000 -S appuser && \
-    adduser -u 1000 -S appuser -G appuser
-
-# Create directories with proper permissions
-RUN mkdir -p /app /tmp/rails && \
-    chown -R appuser:appuser /app /tmp/rails && \
-    chmod 755 /app /tmp/rails
-
-WORKDIR /app
-
-# Health check
+# Health check for production
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD curl -f http://localhost:3000/health || exit 1
 
-# Switch to non-root user
+# Switch back to non-root user
 USER appuser
 
+# Production-ready command
 CMD ["bundle", "exec", "puma", "-C", "config/puma.rb"]

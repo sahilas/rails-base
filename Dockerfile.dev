@@ -1,121 +1,60 @@
-# Development Base Image - Includes dev tools and debug packages
-FROM ruby:3.3.0-alpine
+# Development Image - Extends base with dev-specific tools
+FROM ./Dockerfile.base
 
-LABEL maintainer="your-email@example.com"
 LABEL description="Ruby Rails development base image with dev tools"
-LABEL version="dev"
+LABEL version="dev-3.0"
 
-# Install all packages including development tools
-RUN apk update --no-cache && \
-    apk upgrade --no-cache && \
-    apk add --no-cache \
-    # Build essentials
-    build-base \
-    gcc \
+# Switch back to root to install packages
+USER root
+
+# Install development-specific packages
+RUN apk add --no-cache \
+    # Additional build dependencies for dev
     g++ \
-    make \
     cmake \
     autoconf \
     automake \
     libtool \
-    pkgconfig \
-    # System libraries
-    musl-dev \
-    linux-headers \
-    # Network and SSL
-    curl \
     curl-dev \
-    openssl-dev \
-    ca-certificates \
-    # Version control
-    git \
-    # Database clients and dev libraries
-    postgresql-client \
-    postgresql-dev \
-    libpq-dev \
+    # Enhanced image processing for dev
+    imagemagick-dev \
+    libjpeg-turbo-dev \
+    libpng-dev \
+    freetype-dev \
+    libwebp-dev \
+    # Additional databases for dev
     sqlite \
     sqlite-dev \
-    # Image processing
-    imagemagick \
-    imagemagick-dev \
-    libjpeg-turbo \
-    libjpeg-turbo-dev \
-    libpng \
-    libpng-dev \
-    freetype \
-    freetype-dev \
-    # JavaScript runtime
-    nodejs \
-    npm \
+    # JavaScript package managers
     yarn \
-    # System utilities
-    bash \
-    tzdata \
+    # System utilities for development
     wget \
-    unzip \
-    # Development tools
+    # Development editors and tools
     vim \
     nano \
     less \
     tree \
-    htop \
-    strace \
-    # Debug tools
-    gdb \
-    valgrind \
-    # Performance libraries
-    libgomp \
-    # Additional libraries
-    libxml2-dev \
-    libxslt-dev \
-    zlib-dev \
-    readline-dev \
-    yaml-dev \
-    libffi-dev \
-    gdbm-dev \
-    ncurses-dev \
-    # Process management
-    dumb-init \
-    # Python for native extensions
-    python3 \
-    python3-dev \
-    py3-pip \
-    && rm -rf /var/cache/apk/* /tmp/* /var/tmp/*
+    # Additional compression tools
+    bzip2 \
+    xz \
+    && rm -rf /var/cache/apk/*
 
-# Pre-configure Ruby environment
-ENV LANG=C.UTF-8
-ENV LC_ALL=C.UTF-8
-ENV RUBY_YJIT_ENABLE=1
+# Configure development environment
 ENV MALLOC_ARENA_MAX=2
 
-# Configure Bundler for development
-RUN gem install bundler -v 2.6.5 --no-document && \
-    bundle config set --global jobs $(nproc) && \
-    bundle config set --global retry 3 && \
-    bundle config set --global timeout 30 && \
-    bundle config set --global silence_root_warning true
-
-# Pre-install development gems
+# Pre-install development-specific gems
 RUN gem install --no-document \
-    rake \
-    rails \
-    pg \
     redis \
     sidekiq \
-    puma \
-    bootsnap \
     debug \
     rspec \
     rubocop
 
-# Create directories
-RUN mkdir -p /app /tmp/rails && \
-    chmod 755 /app /tmp/rails
-
-WORKDIR /app
-
-# Health check
+# Health check for development
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD curl -f http://localhost:3000/health || exit 1
+
+# Switch back to non-root user
+USER appuser
 
 CMD ["/bin/bash"]

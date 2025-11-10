@@ -1,9 +1,13 @@
-# Minimal Rails Base Image - Only essential packages
+# Minimal Rails Base Image - Secure minimal setup
 FROM ruby:3.3.0-alpine
 
-LABEL maintainer="your-email@example.com"
-LABEL description="Minimal Ruby Rails base image - essential packages only"
-LABEL version="minimal"
+LABEL maintainer="sahil@khushibaby.org"
+LABEL description="Minimal Ruby Rails base image - secure and essential packages only"
+LABEL version="minimal-2.0"
+
+# Create non-root user for security
+RUN addgroup -g 1000 -S appuser && \
+    adduser -u 1000 -S appuser -G appuser
 
 # Install only essential packages
 RUN apk update --no-cache && \
@@ -26,6 +30,16 @@ RUN apk update --no-cache && \
     # System utilities
     bash \
     tzdata \
+    # Core libraries for gems
+    libxml2-dev \
+    zlib-dev \
+    yaml-dev \
+    libffi-dev \
+    # Additional libraries needed for gems
+    gdbm-dev \
+    ncurses-dev \
+    # Compression libraries (for rubyzip)
+    gzip \
     # Process management
     dumb-init \
     && rm -rf /var/cache/apk/* /tmp/* /var/tmp/*
@@ -44,10 +58,14 @@ RUN gem install --no-document \
     rails \
     pg
 
-# Create directories
+# Create directories with proper ownership
 RUN mkdir -p /app && \
+    chown -R appuser:appuser /app && \
     chmod 755 /app
 
 WORKDIR /app
+
+# Switch to non-root user for security
+USER appuser
 
 CMD ["/bin/bash"]
