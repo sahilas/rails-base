@@ -28,13 +28,8 @@ ENV LD_PRELOAD=libmimalloc.so.2
 ENV RAILS_ENV=production
 ENV NODE_ENV=production
 
-# Configure Bundler for production (exclude dev/test gems)
-RUN bundle config set --global without 'development test'
-
-# Pre-install production-specific gems
-RUN gem install --no-document \
-    redis \
-    sidekiq
+# Production gems are already installed from base image
+# Base image excludes development and test gems
 
 # Health check for production
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \

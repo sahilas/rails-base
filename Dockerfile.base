@@ -67,20 +67,22 @@ RUN gem install bundler -v 2.6.5 --no-document && \
     bundle config set --global timeout 30 && \
     bundle config set --global silence_root_warning true
 
-# Pre-install essential gems common to all environments
-RUN gem install --no-document \
-    rake \
-    rails \
-    pg \
-    puma \
-    bootsnap
-
 # Create directories with proper ownership
 RUN mkdir -p /app /tmp/rails && \
     chown -R appuser:appuser /app /tmp/rails && \
     chmod 755 /app /tmp/rails
 
 WORKDIR /app
+
+# Copy Gemfile and Gemfile.lock
+COPY Gemfile Gemfile.lock ./
+
+# Install gems from Gemfile (production gems only for base)
+RUN bundle config set --global without 'development test' && \
+    bundle install --jobs $(nproc) --retry 3 && \
+    rm -rf /usr/local/bundle/cache/*.gem && \
+    find /usr/local/bundle/gems/ -name "*.c" -delete && \
+    find /usr/local/bundle/gems/ -name "*.o" -delete
 
 # Switch to non-root user for security
 USER appuser

@@ -42,13 +42,10 @@ RUN apk add --no-cache \
 # Configure development environment
 ENV MALLOC_ARENA_MAX=2
 
-# Pre-install development-specific gems
-RUN gem install --no-document \
-    redis \
-    sidekiq \
-    debug \
-    rspec \
-    rubocop
+# Reinstall all gems including development and test gems
+RUN bundle config set --global without '' && \
+    bundle install --jobs $(nproc) --retry 3 && \
+    rm -rf /usr/local/bundle/cache/*.gem
 
 # Health check for development
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
