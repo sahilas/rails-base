@@ -1,5 +1,5 @@
 # Production Image - Extends base with production optimizations
-FROM rails-base:latest
+FROM ghcr.io/sahilas/rails-base:latest
 
 LABEL description="Ruby Rails production base image - optimized and secure"
 LABEL version="prod-3.0"
