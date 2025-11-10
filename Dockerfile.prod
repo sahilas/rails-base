@@ -1,5 +1,5 @@
 # Production Image - Extends base with production optimizations
-FROM ./Dockerfile.base
+FROM rails-base:latest
 
 LABEL description="Ruby Rails production base image - optimized and secure"
 LABEL version="prod-3.0"

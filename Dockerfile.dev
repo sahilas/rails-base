@@ -1,5 +1,5 @@
 # Development Image - Extends base with dev-specific tools
-FROM ./Dockerfile.base
+FROM rails-base:latest
 
 LABEL description="Ruby Rails development base image with dev tools"
 LABEL version="dev-3.0"
