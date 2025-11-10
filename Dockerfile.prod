@@ -28,8 +28,13 @@ ENV LD_PRELOAD=libmimalloc.so.2
 ENV RAILS_ENV=production
 ENV NODE_ENV=production
 
-# Production gems are already installed from base image
-# Base image excludes development and test gems
+# Copy Gemfile for bundle exec commands
+COPY Gemfile Gemfile.lock ./
+
+# Configure bundler for production and install only production gems
+RUN bundle config set --global without 'development test' && \
+    bundle config set --global deployment 'true' && \
+    bundle install --local --quiet || bundle install --quiet
 
 # Health check for production
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \

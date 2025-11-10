@@ -9,22 +9,15 @@ USER root
 
 # Install development-specific packages
 RUN apk add --no-cache \
-    # Additional build dependencies for dev
+    # Additional build dependencies for native gems
     g++ \
-    cmake \
-    autoconf \
-    automake \
-    libtool \
     curl-dev \
-    # Enhanced image processing for dev
+    # Enhanced image processing for carrierwave/mini_magick
     imagemagick-dev \
     libjpeg-turbo-dev \
     libpng-dev \
     freetype-dev \
     libwebp-dev \
-    # Additional databases for dev
-    sqlite \
-    sqlite-dev \
     # JavaScript package managers
     yarn \
     # System utilities for development
@@ -34,13 +27,16 @@ RUN apk add --no-cache \
     nano \
     less \
     tree \
-    # Additional compression tools
+    # Additional compression tools for rubyzip
     bzip2 \
     xz \
     && rm -rf /var/cache/apk/*
 
 # Configure development environment
 ENV MALLOC_ARENA_MAX=2
+
+# Copy Gemfile for development gems
+COPY Gemfile Gemfile.lock ./
 
 # Reinstall all gems including development and test gems
 RUN bundle config set --global without '' && \
