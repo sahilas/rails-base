@@ -15,7 +15,7 @@ gem 'jsonapi-serializer-custom', github: 'sriniarul/jsonapi-serializer-custom', 
 gem 'lograge'
 gem "puma", "~> 6.6"
 gem 'jwt'
-gem 'bcrypt', '~> 3.1.16'
+gem 'bcrypt', '~> 3.1.22'
 gem 'rswag'
 gem 'rswag-ui'
 gem 'rack-cors'
