@@ -1,5 +1,5 @@
 # Base Image Dockerfile - Foundation for Rails applications
-FROM ruby:3.3.0-alpine
+FROM ruby:4.0.1-alpine
 
 # Maintainer info  
 LABEL maintainer="sahil@khushibaby.org"
@@ -61,7 +61,7 @@ ENV LC_ALL=C.UTF-8
 ENV RUBY_YJIT_ENABLE=1
 
 # Configure Bundler
-RUN gem install bundler -v 2.6.5 --no-document && \
+RUN gem install bundler -v 4.0.10 --no-document && \
     bundle config set --global jobs $(nproc) && \
     bundle config set --global retry 3 && \
     bundle config set --global timeout 30 && \

@@ -1,5 +1,5 @@
 # Minimal Rails Base Image - Secure minimal setup
-FROM ruby:3.3.0-alpine
+FROM ruby:4.0.1-alpine
 
 LABEL maintainer="sahil@khushibaby.org"
 LABEL description="Minimal Ruby Rails base image - secure and essential packages only"
